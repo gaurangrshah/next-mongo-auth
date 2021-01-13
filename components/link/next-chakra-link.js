@@ -17,13 +17,10 @@ const NextLink = chakra(Link, {
   },
 });
 
-export const SimpleNextLink = ({ href, children, rest }) => {
+export const SimpleNextLink = ({ href, children, ...rest }) => {
   return (
     <NextLink href={href} passHref>
       <ChakraLink
-        // _hover={{
-        //   textDecoration: 'none',
-        // }}
         {...rest}
       >
         {children}
