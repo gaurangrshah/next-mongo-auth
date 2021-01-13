@@ -8,16 +8,16 @@ import CustomLink from "@/components/link/custom-link";
 import { NavProvider } from "../contexts/nav-context";
 import { useToastState } from "../contexts/toast-context";
 import { LogoIcon } from "@/components";
-
 import data from "../../config/setup.json";
 
-export function DefaultLayout({ title, SEO, config, children }) {
+export function DefaultLayout({ title, SEO, config, Components = [], children}) {
   const { color } = useColor();
   const { msg, toast } = useToastState();
   useEffect(() => {
     if (!msg) return;
     toast(msg);
   }, [msg]);
+
 
   return (
     <>
@@ -45,7 +45,9 @@ export function DefaultLayout({ title, SEO, config, children }) {
           layerStyle='footer'
           display={config?.footerShow ? "flex" : "none"}
         >
-          <Box layerStyle='footer.body'>Footer</Box>
+          <Box layerStyle='footer.body'>
+            {Components.length && Components[1] ? Components[1] : "footer"}
+          </Box>
         </Flex>
       </Flex>
     </>

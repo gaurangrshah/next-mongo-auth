@@ -6,6 +6,7 @@ import { ToastProvider } from "@/chakra/contexts/toast-context";
 import { DefaultLayout } from "@/chakra/layouts/default";
 import Nprogress from "@/components/nprogress";
 import SEO from "../next-seo.config";
+import Footer from "@/components/footer";
 
 const App = ({ Component, pageProps }) => {
   return (
@@ -14,7 +15,10 @@ const App = ({ Component, pageProps }) => {
       <ChakraProvider resetCSS theme={theme}>
         <Nprogress />
         <ToastProvider>
-          <DefaultLayout config={{ headerShow: true, footerShow: true }}>
+          <DefaultLayout
+            config={{ headerShow: true, footerShow: true }}
+            Components={[null, <Footer />]}
+          >
             <Component {...pageProps} />
           </DefaultLayout>
         </ToastProvider>

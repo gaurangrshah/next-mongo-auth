@@ -1,5 +1,6 @@
 export const card = {
   minW: "320px",
+  minH: "185px",
   m: 6,
   flexBasis: "45%",
   p: 9,
