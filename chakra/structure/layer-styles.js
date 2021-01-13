@@ -5,6 +5,8 @@ import { main } from './main'
 import { wrapper } from './wrapper'
 import { responsive, fullWidth, flexCenter } from './container';
 import { row } from './row'
+import customLayerStyles from "@/styles/layer-styles";
+
 
 const layerStyles = {
   wrapper,
@@ -15,7 +17,8 @@ const layerStyles = {
   responsive,
   fullWidth,
   flexCenter,
-  row
+  row,
+  ...customLayerStyles
 };
 
 export default layerStyles
