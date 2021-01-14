@@ -1,27 +1,29 @@
 import React, { useEffect } from "react";
 import { Avatar, Box, chakra, Flex, Heading, Slide } from "@chakra-ui/react";
+// import { useSession } from "next-auth/client";
 
 import { Nav } from "./nav";
-
-import { useNavDispatch } from "@/chakra/contexts/nav-context";
-// import { useSession } from "next-auth/client";
-import { constants } from "../structure/constants";
+import { useNavDispatch } from "@/components/chakra/contexts/nav-context";
+import { constants } from "@/chakra/structure/constants";
+import useColor from "@/chakra/hooks/use-color";
+import { LogoIcon } from '@/components';
 
 const SlideHeader = chakra(Slide, {
   shouldForwardProp: (prop) => !["no-op"].includes(prop),
 });
 
-export const Header = ({
+
+const Header = ({
   title,
-  Logo,
   pages,
   controls,
   headerShow = false,
+
   ...rest
 }) => {
+  const { color } = useColor();
   const { updatePages, updateControls } = useNavDispatch();
   // const [session] = useSession();
-
   useEffect(() => {
     if (!pages) return;
     updatePages(pages);
@@ -31,7 +33,6 @@ export const Header = ({
     if (!controls) return;
     updateControls(controls);
   }, []);
-
   return (
     headerShow && (
       <SlideHeader
@@ -40,11 +41,12 @@ export const Header = ({
         in={headerShow}
         {...rest}
         layerStyle='header'
+        bg={color("barBg")}
         style={{ width: "100%", height: constants.headerHeight, zIndex: 1100 }}
       >
         <Flex layerStyle='header.body'>
-          {Logo ? (
-            <Logo title={title} w={12} h={12} minW='1/5' mr='auto' />
+          {LogoIcon ? (
+            <LogoIcon title={title} w={12} h={12} minW='1/5' mr='auto' />
           ) : (
             <Heading
               as='h1'
@@ -58,7 +60,7 @@ export const Header = ({
               {title}
             </Heading>
           )}
-          <Nav title={title} {...{ Logo }} />
+          <Nav title={title} Logo={LogoIcon} />
           {/* {session && (
             <Avatar
               size='sm'
@@ -73,3 +75,5 @@ export const Header = ({
     )
   );
 };
+
+export default Header

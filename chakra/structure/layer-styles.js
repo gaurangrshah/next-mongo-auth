@@ -5,7 +5,7 @@ import { main } from './main'
 import { wrapper } from './wrapper'
 import { responsive, fullWidth, flexCenter } from './container';
 import { row } from './row'
-import customLayerStyles from "@/styles/layer-styles";
+import customLayerStyles from "@/theme/layer-styles";
 
 
 const layerStyles = {

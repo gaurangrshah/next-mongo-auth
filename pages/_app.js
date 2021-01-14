@@ -4,9 +4,12 @@ import { DefaultSeo } from "next-seo";
 import { theme } from "@/chakra";
 import { ToastProvider } from "@/chakra/contexts/toast-context";
 import { DefaultLayout } from "@/chakra/layouts/default";
-import Nprogress from "@/components/nprogress";
 import SEO from "../next-seo.config";
-import Footer from "@/components/footer";
+import Footer from "@/components/chakra/footer";
+import Header from "@/components/chakra/nav-bar/header"
+import CustomLink from "@/components/link/custom-link";
+import Nprogress from "@/components/nprogress";
+import data from "@/config/setup.json"
 
 const App = ({ Component, pageProps }) => {
   return (
@@ -16,8 +19,15 @@ const App = ({ Component, pageProps }) => {
         <Nprogress />
         <ToastProvider>
           <DefaultLayout
-            config={{ headerShow: true, footerShow: true }}
-            Components={[null, <Footer />]}
+            bars={[
+              <Header
+                title='Proto UI'
+                pages={data?.pages || []}
+                controls={[CustomLink]}
+                headerShow={true}
+              />,
+              <Footer />,
+            ]}
           >
             <Component {...pageProps} />
           </DefaultLayout>

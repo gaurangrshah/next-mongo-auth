@@ -1,5 +1,6 @@
 export const card = {
-  minW: "320px",
+  // convert to chakra width units
+  minW: ["400px", "600px", null, "320px"],
   minH: "185px",
   m: 6,
   flexBasis: "45%",

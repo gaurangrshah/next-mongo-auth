@@ -10,7 +10,6 @@ import {
 } from '@chakra-ui/react'
 
 import { Burger } from './burger'
-import useColor from '../hooks/use-color'
 
 export const DrawerMenu = ({
   isOpen,

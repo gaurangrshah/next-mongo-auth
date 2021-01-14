@@ -10,7 +10,7 @@ export default function Home() {
       </Head>
 
       <Box pt='12' textAlign='center'>
-        <Heading as='h1' color='blue.600'>
+        <Heading as='h1'mb={3} color='blue.600'>
           Welcome to <a href='https://nextjs.org'>Next.js!</a>
         </Heading>
 
@@ -28,7 +28,9 @@ export default function Home() {
           flexWrap='wrap'
         >
           <Link href='https://nextjs.org/docs' layerStyle='card'>
-            <Heading as='h3'>Documentation &rarr;</Heading>
+            <Heading as='h3' mb={5}>
+              Documentation &rarr;
+            </Heading>
             <Text lineHeight='6' fontSize='md'>
               Find in-depth information about Next.js features and API.
             </Text>
@@ -68,8 +70,6 @@ export default function Home() {
           </Link>
         </Flex>
       </Box>
-
-
     </Box>
   );
 }
