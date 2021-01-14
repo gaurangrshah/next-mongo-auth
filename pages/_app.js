@@ -20,12 +20,7 @@ const App = ({ Component, pageProps }) => {
         <ToastProvider>
           <DefaultLayout
             bars={[
-              <Header
-                title='Proto UI'
-                pages={data?.pages || []}
-                controls={[CustomLink]}
-                headerShow={true}
-              />,
+              <Header show={true} />,
               <Footer />,
             ]}
           >

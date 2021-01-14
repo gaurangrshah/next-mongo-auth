@@ -10,6 +10,8 @@ export function DefaultLayout({ bars = [], children }) {
   const { color } = useColor();
   const { msg, toast } = useToastState();
 
+  const [Header, Footer] = bars
+
   useEffect(() => {
     if (!msg) return;
     toast(msg);
@@ -20,18 +22,14 @@ export function DefaultLayout({ bars = [], children }) {
       <ModeToggle />
       <Flex className='wrapper' layerStyle='wrapper'>
         <NavProvider>
-          {bars.length && bars[0] ? bars[0] : null}
+          {Header ? Header : null}
         </NavProvider>
         <Box as='main' layerStyle='main'>
           {children}
         </Box>
-        <Flex
-          as='footer'
-          bg={color("barBg")}
-          layerStyle='footer'
-        >
+        <Flex as='footer' bg={color("barBg")} layerStyle='footer'>
           <Box layerStyle='footer.body'>
-            {bars.length && bars[1] ? bars[1] : "footer"}
+            {Footer ? Footer : "footer"}
           </Box>
         </Flex>
       </Flex>

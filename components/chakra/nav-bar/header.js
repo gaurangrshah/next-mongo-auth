@@ -7,38 +7,33 @@ import { useNavDispatch } from "@/components/chakra/contexts/nav-context";
 import { constants } from "@/chakra/structure/constants";
 import useColor from "@/chakra/hooks/use-color";
 import { LogoIcon } from '@/components';
+import data from "@/config/setup.json";
+import CustomLink from "@/components/link/custom-link";
+import { AuthButton } from '../../auth/auth-buttons';
 
 const SlideHeader = chakra(Slide, {
   shouldForwardProp: (prop) => !["no-op"].includes(prop),
 });
 
 
-const Header = ({
-  title,
-  pages,
-  controls,
-  headerShow = false,
-
-  ...rest
-}) => {
+const Header = ({ title = "Proto UI", controls, show = false, ...rest }) => {
   const { color } = useColor();
   const { updatePages, updateControls } = useNavDispatch();
   // const [session] = useSession();
   useEffect(() => {
-    if (!pages) return;
-    updatePages(pages);
+    updatePages(data?.pages || []);
   }, []);
 
   useEffect(() => {
-    if (!controls) return;
-    updateControls(controls);
+    if (!CustomLink || !AuthButton) return;
+    updateControls([CustomLink]);
   }, []);
   return (
-    headerShow && (
+    show && (
       <SlideHeader
         as='header'
         direction='top'
-        in={headerShow}
+        in={show}
         {...rest}
         layerStyle='header'
         bg={color("barBg")}
