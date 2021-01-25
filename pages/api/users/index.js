@@ -1,58 +1,22 @@
 import nc from "next-connect";
-import dbConnect from "@/utils/mongoose";
-import User from "@/models/user";
-
-const dummyUser = {
-  name: "Steve Dummy",
-  age: "27",
-};
-
-const createUser = async (req) => {
-  const created = await new User(req.body.name ? { ...req.body } : dummyUser)
-    .save()
-    .then((createdUser) => createdUser)
-    .catch((e) => console.log(e));
-
-  return created;
-};
-
-const getUsers = async () => {
-  return await User.find({})
-    .select("-__v")
-    .then((users) => users)
-    .catch((e) => e);
-};
+import middleware from "@/middleware/index"
+import TC from "@/utils/trycatch";
+import { createUser, getUsers, deleteAllUsers } from "@/controllers/user";
+import { onNoMatch, onError } from "@/utils/handlers";
 
 
-const deleteAllUsers = async () => await User.deleteMany().exec();
 
 const handler = nc({ onNoMatch, onError })
-  .use(async (req, res, next) => {
-    console.log("---middleware---");
-    await dbConnect();
-    next();
-  })
+  .use(middleware)
   .get(async (req, res) => {
-    res.json({ success: "ok", users: await getUsers() });
+    res.json({ success: "ok", users: await TC(() => getUsers()) });
   })
   .post(async (req, res) => {
-    res.json({ success: "ok", user: await createUser(req) });
+    res.json({ success: "ok", user: await TC(() => createUser(req) )});
   })
   .delete(async (req, res) => {
-    await deleteAllUsers();
+    await TC(() => deleteAllUsers());
     res.json({ success: "ok" });
   });
 
 export default handler;
-
-function onNoMatch(req, res) {
-  res.status(404).end("page is not found... or is it");
-}
-
-function onError(err, req, res, next) {
-  console.log(err);
-
-  res.status(500).end(err.toString());
-  // OR: you may want to continue
-  next();
-}

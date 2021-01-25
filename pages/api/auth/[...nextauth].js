@@ -34,16 +34,21 @@ if (process.env.GITHUB_CLIENT_ID) {
       },
 
       async authorize({ email, password }) {
-        return {
+        if (!email || !password) {
+          throw new Error("Must provide a valid matching email and password");
+        }
+
+        const user = {
           id: email.split("@")[0],
           name: email.split("@")[0],
           username: email.split("@")[0],
           email: email,
           password,
-          image: `https://api.adorable.io/avatars/128/${
-            email.split("@")[0]
-          }.png`,
+          image: `https://www.avatarapi.com/js.aspx?email=${email}&size=128"`,
         };
+
+        if (user) return Promise.resolve(user);
+        return Promise.resolve(null);
       },
     })
   );
@@ -52,26 +57,22 @@ if (process.env.GITHUB_CLIENT_ID) {
 const callbacks = {};
 
 // callbacks.signIn = async function signIn(user, account, metadata) {
-//   if (account.provider === "github") {
-//     const githubUser = {
-//       id: metadata.id,
-//       login: metadata.login,
-//       name: metadata.name,
-//       avatar: user.image,
-//     };
+//   let isAllowedToSignIn = true;
+//   // const emailRes = await fetch("https://api.github.com/user/emails", {
+//   //   headers: {
+//   //     Authorization: `token ${account.accessToken}`,
+//   //   },
+//   // });
+//   // const emails = await emailRes.json();
+//   // const primaryEmail = emails.find((e) => e.primary).email;
 
-//     user.accessToken = await getTokenFromYourAPIServer("github", githubUser);
-//     return true;
-//   }
-
-//   return false;
+//   // user.email = primaryEmail;
+//   if (isAllowedToSignIn) return Promise.resolve(true);
+//   return Promise.resolve(false);
 // };
 
 // callbacks.jwt = async function jwt(token, user) {
-//   if (user) {
-//     token = { accessToken: user.accessToken };
-//   }
-
+//   if (user) token = { id: user.id };
 //   return token;
 // };
 
@@ -79,7 +80,6 @@ const callbacks = {};
 //   session.accessToken = token.accessToken;
 //   return session;
 // };
-
 
 const options = {
   providers,
@@ -94,13 +94,16 @@ const options = {
     updateAge: 24 * 60 * 60, // 24 hours
   },
   jwt: {
+    // signingKey: process.env.JWT_SIGNING_PRIVATE_KEY,
     secret: process.env.JWT_SECRET || "this-should-be-a-secret",
   },
   callbacks,
   database: {
     type: "mongodb",
     useNewUrlParser: true,
+    useCreateIndex: true,
     useUnifiedTopology: true,
+    useFindAndModify: false,
     url: `${process.env.MONGODB_URL}/task-manager-api`,
   },
   // Enable debug messages in the console if you are having problems

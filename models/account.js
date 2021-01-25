@@ -1,10 +1,10 @@
-const mongoose = require("mongoose");
-const ObjectId = mongoose.ObjectId;
+const {models, model, Schema, Types} = require("mongoose");
 
-const AccountSchema = new mongoose.Schema(
+
+const AccountSchema = new Schema(
   {
     compoundId: {
-      type: ObjectId,
+      type: Types.ObjectId,
       required: true,
       unique: true,
     },
@@ -28,5 +28,5 @@ const AccountSchema = new mongoose.Schema(
   { timestamps: { currentTime: () => Math.floor(Date.now() / 1000) } }
 );
 
-export default mongoose.models.Account ||
-  mongoose.model("Account", AccountSchema);
+export default models.Account ||
+  model("Account", AccountSchema);
