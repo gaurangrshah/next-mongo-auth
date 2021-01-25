@@ -3,9 +3,19 @@ import dbConnect from "@/utils/mongoose";
 import Task from "@/models/task";
 
 const dummyTask = {
-  name: "Talk 3",
+  description: "Talk 3",
 };
 
+const createTask = async (req) => {
+  const created = await new Task(
+    req.body.description ? { ...req.body } : dummyTask
+  )
+    .save()
+    .then((createdTask) => createdTask)
+    .catch((e) => console.log(e));
+
+  return created;
+};
 
 const getTasks = async () => {
   return await Task.find({})
@@ -13,14 +23,17 @@ const getTasks = async () => {
     .catch((e) => console.log("err!", e));
 };
 
-const deleteTasks = async (id) => {
-  return await Task.deleteMany({})
-    .then((task) => {
-      return Task.countDocuments({});
-    })
-    .then((count) => count)
-    .catch((e) => console.log("err!", e));
-};
+
+const deleteAllTasks = async () => await Task.deleteMany().exec()
+// const deleteTasks = async () => {
+//   return await Task.deleteMany({})
+//     .then((task) => {
+//       console.log("removed", task);
+//       return Task.countDocuments({});
+//     })
+//     .then((count) => count)
+//     .catch((e) => console.log("err!", e));
+// };
 
 const handler = nc({ onNoMatch, onError })
   .use(async (req, res, next) => {
@@ -31,8 +44,11 @@ const handler = nc({ onNoMatch, onError })
   .get(async (req, res) => {
     res.json({ task: await getTasks() });
   })
+  .post(async (req, res) => {
+    res.json({ success: "ok", task: await createTask(req) });
+  })
   .delete(async (req, res) => {
-    res.json({ task: await deleteTasks() });
+    res.json({ task: await deleteAllTasks() });
   });
 
 export default handler;

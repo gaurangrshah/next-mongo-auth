@@ -1,7 +1,18 @@
 import Head from "next/head";
-import { Box, Code, Flex, Heading, Image, Link, Text } from "@chakra-ui/react";
+import {
+  Box,
+  Button, Code,
+  Flex,
+  Heading,
+  Image,
+  Link,
+  Text,
+} from "@chakra-ui/react";
+
+import { useAuth } from "@/hooks/useAuth";
 
 export default function Home() {
+   const { isAuthenticated, session, signOut, signIn } = useAuth();
   return (
     <Box layerStyle='container'>
       <Head>
@@ -10,7 +21,7 @@ export default function Home() {
       </Head>
 
       <Box pt='12' textAlign='center'>
-        <Heading as='h1'mb={3} color='blue.600'>
+        <Heading as='h1' mb={3} color='blue.600'>
           Welcome to <a href='https://nextjs.org'>Next.js!</a>
         </Heading>
 
@@ -20,7 +31,18 @@ export default function Home() {
             pages/index.js
           </Code>
         </Text>
-
+        {isAuthenticated && (
+          <>
+            {`Signed in as ${session?.user.email}`}
+            <br />
+            <Button onClick={signOut}>Logout</Button>
+          </>
+        )}
+        {!isAuthenticated && (
+          <>
+            <Button onClick={signIn}>Login</Button>
+          </>
+        )}
         <Flex
           layerStyle='responsive'
           align='center'

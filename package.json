@@ -20,6 +20,7 @@
     "mongodb": "^3.6.3",
     "mongoose": "^5.11.13",
     "next": "10.0.5",
+    "next-auth": "^3.1.0",
     "next-connect": "^0.9.1",
     "next-google-fonts": "^1.2.1",
     "next-seo": "^4.17.0",

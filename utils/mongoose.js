@@ -3,7 +3,7 @@ import User from "@/models/user";
 
 const connection = {}; /* creating connection object*/
 
-const connectionURL = "mongodb://127.0.0.1:27017";
+const connectionURL = "mongodb://127.0.0.1:27017" || process.env.MONGODB_URL;
 const databaseName = "task-manager-api";
 
 const options = {
