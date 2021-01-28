@@ -14,6 +14,7 @@
     "@chakra-ui/theme-tools": "^1.0.3",
     "@emotion/react": "^11.1.4",
     "@emotion/styled": "^11.0.0",
+    "bcryptjs": "^2.4.3",
     "focus-visible": "^5.2.0",
     "framer-motion": "^3.2.1",
     "lodash.debounce": "^4.0.8",
@@ -26,9 +27,13 @@
     "nprogress": "^0.2.0",
     "react": "17.0.1",
     "react-dom": "17.0.1",
+    "react-hook-form": "^6.14.2",
     "validator": "^13.5.2"
   },
   "optionalPeerDependencies": {
     "mongodb": "^3.6.3"
+  },
+  "devDependencies": {
+    "morgan": "^1.10.0"
   }
 }

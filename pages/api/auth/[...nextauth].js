@@ -1,5 +1,11 @@
 import NextAuth from "next-auth";
 import Providers from "next-auth/providers";
+import mongoose from "mongoose";
+
+import { authorizeUserBasedOnStatus, registerUser } from "@/utils/auth";
+import TC from "@/utils/trycatch";
+import Models from "@/models";
+import dbConnect from "@/utils/mongoose";
 
 const providers = [
   Providers.Email({
@@ -28,27 +34,26 @@ if (process.env.GITHUB_CLIENT_ID) {
     // save user with local credentials
     Providers.Credentials({
       name: "local",
-      credentials: {
-        email: { label: "email", type: "text" },
-        password: { label: "password", type: "password" },
-      },
 
-      async authorize({ email, password }) {
-        if (!email || !password) {
-          throw new Error("Must provide a valid matching email and password");
+      async authorize(credentials) {
+        console.log("------Credentials Authorize------");
+        const { email, password } = credentials;
+
+        if (mongoose.connections[0].readyState !== 1) {
+          await dbConnect();
+          console.log("------DB CONNECT-----");
         }
-
-        const user = {
-          id: email.split("@")[0],
-          name: email.split("@")[0],
-          username: email.split("@")[0],
-          email: email,
-          password,
-          image: `https://www.avatarapi.com/js.aspx?email=${email}&size=128"`,
-        };
-
-        if (user) return Promise.resolve(user);
-        return Promise.resolve(null);
+        let user = await Models.User.findByEmail(email);
+        if (user) {
+          console.log("authorize: returning found user");
+          return Promise.resolve(user);
+        }
+        return (
+          !user &&
+          Promise.reject(
+            "/auth/credentials-signin?error=User could not be authorized"
+          )
+        );
       },
     })
   );
@@ -56,29 +61,103 @@ if (process.env.GITHUB_CLIENT_ID) {
 
 const callbacks = {};
 
-// callbacks.signIn = async function signIn(user, account, metadata) {
-//   let isAllowedToSignIn = true;
-//   // const emailRes = await fetch("https://api.github.com/user/emails", {
-//   //   headers: {
-//   //     Authorization: `token ${account.accessToken}`,
-//   //   },
-//   // });
-//   // const emails = await emailRes.json();
-//   // const primaryEmail = emails.find((e) => e.primary).email;
+callbacks.signIn = async function signIn(user, account, profile) {
+  console.log(
+    "🚀 ~ file: [...nextauth].js ~ line 73 ~ signIn ~ user, account, profile",
+    user,
+    account,
+    profile
+  );
+  /**
+   * @param  {object} user     User object
+   * @param  {object} account  Provider account
+   * @param  {object} profile  Provider profile
+   * @return {boolean}         Return `true` (or a modified JWT) to allow sign in
+   *                           Return `false` to deny access
+   */
 
-//   // user.email = primaryEmail;
-//   if (isAllowedToSignIn) return Promise.resolve(true);
-//   return Promise.resolve(false);
-// };
+  console.log("-----SIGNIN CHECK-----");
 
-// callbacks.jwt = async function jwt(token, user) {
-//   if (user) token = { id: user.id };
-//   return token;
-// };
+  // oauth providers are preconfigured, we don't have to manually do any authentication
+  if (account.type === "oauth" || account.type === "email") return true; // ↩️
+
+  let isEmailVerified = false; // checks if user's email has been verified
+  let dbUser = undefined; // matching database user to users signing in.
+  let isAllowedToLogin = false; // allows/disallows login - based on a valid dbUser
+
+  // FIXME: when user passwords should be validated should be
+  dbUser = await Models.User.findByEmail(user.email);
+  console.log(
+    "🚀 ~ file: [...nextauth].js ~ line 81 ~ signIn ~ dbUser",
+    dbUser
+  );
+
+  if (!dbUser) console.log("----USER NOT FOUND2----");
+
+  console.log("-----validating passwords-----");
+
+  // @TODO: Add a check for verified once we get verification extended
+
+  // isEmailVerified = !!dbUser?.emailVerified;
+  // if (!isEmailVerified) console.log("----EMAIL NOT VERIFIED----");
+
+  isAllowedToLogin = dbUser.validPassword(user.password);
+
+  if (isAllowedToLogin) {
+    console.log("-----------USER IS BEING LOGGED IN--------");
+    return Promise.resolve("/secret"); // ↩️
+  }
+  console.log("-----------USER IS NOT ALLOWED TO LOGIN--------");
+  return Promise.resolve(false); // ↩️
+};
+
+// @link used for jwt & session: https://tinyurl.com/y3ypltj2
+callbacks.jwt = async (token, user, account, profile, isNewUser) => {
+  /**
+   * @param  {object}  token     Decrypted JSON Web Token
+   * @param  {object}  user      User object      (only available on sign in)
+   * @param  {object}  account   Provider account (only available on sign in)
+   * @param  {object}  profile   Provider profile (only available on sign in)
+   * @param  {boolean} isNewUser True if new user (only available on sign in)
+   * @return {object}            JSON Web Token that will be saved
+   */
+  //   if (user) token = { id: user.id };
+  //   return token;
+
+  console.log("-----JWT CHECK-----");
+  const isSignIn = !!user;
+  if (isSignIn) {
+    token.auth_time = Number(new Date());
+    token.id = user.id;
+    console.log("-----token updated-----");
+  }
+  return Promise.resolve(token);
+};
 
 // callbacks.session = async function session(session, token) {
-//   session.accessToken = token.accessToken;
-//   return session;
+//   /**
+//    * @param  {object} session      Session object
+//    * @param  {object} user         User object    (if using database sessions)
+//    *                               JSON Web Token (if not using database sessions)
+//    * @return {object}              Session that will be returned to the client
+//    */
+//   //   session.accessToken = token.accessToken;
+//   ///  return session;
+//   const { id } = sessionToken;
+//   const url = `${process.env.SITE}/api/user/${id}`;
+//   const res = await fetch(url, {
+//     method: "GET",
+//     headers: {
+//       "Content-Type": "application/json",
+//     },
+//   });
+//   if (res.status === 200) {
+//     const user = await res.json();
+//     session.user.name = user.name;
+//   } else {
+//     return Promise.reject();
+//   }
+//   return Promise.resolve(session);
 // };
 
 const options = {
@@ -105,6 +184,16 @@ const options = {
     useUnifiedTopology: true,
     useFindAndModify: false,
     url: `${process.env.MONGODB_URL}/task-manager-api`,
+    customModels: {
+      User: Models.User,
+      Task: Models.Task,
+      Account: Models.Account,
+      Session: Models.Session,
+      // VerificationRequest: Models.VerificationRequest,
+    },
+  },
+  pages: {
+    signIn: "/auth/signin",
   },
   // Enable debug messages in the console if you are having problems
   debug: true,

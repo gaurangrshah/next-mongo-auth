@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const VerificationRequestSchema = new mongoose.Schema(
+const VerificationRequestsSchema = new mongoose.Schema(
   {
     identifier: String,
     token: {
@@ -13,4 +13,4 @@ const VerificationRequestSchema = new mongoose.Schema(
 );
 
 export default mongoose.models.VerificationRequest ||
-  mongoose.model("VerificationRequest", VerificationRequestSchema);
+  mongoose.model("VerificationRequest", VerificationRequestsSchema);
