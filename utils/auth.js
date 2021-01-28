@@ -1,8 +1,6 @@
-import bcrypt from "bcryptjs";
 import mongoose from "mongoose";
 import dbConnect from "@/utils/mongoose";
 import User from "@/models/user";
-import TC from "@/utils/trycatch";
 
 export const getCsrfToken = async () => {
   try {
@@ -43,17 +41,6 @@ export const sendVerificationRequest = async (email) => {
   }
 };
 
-export async function crossCheckPassword(password, user) {
-  try {
-    const isValidPassword = await bcrypt.compare(password, user.password);
-    if (isValidPassword) return Promise.resolve(isValidPassword);
-    return Promise.reject("/auth/credentials-signin?error=Invalid Password");
-  } catch (e) {
-    console.log("pw e", e);
-  }
-}
-
-// export async function registerUser(name, email, password) {
 export async function registerUser(credentials) {
   console.log("🔵 registering user");
   let creds = credentials.name ? credentials : JSON.parse(credentials);
@@ -100,53 +87,24 @@ export async function registerUser(credentials) {
   return Promise.resolve(created);
 }
 
-export const authorizeUserBasedOnStatus = async (credentials) => {
-  const { email, password } = credentials; // { csrfToken, email, password } = credentials
-
-  if (!email || !password) {
-    return Promise.reject("Must provide a valid matching email and password");
-  }
-
-  console.log("----------GET USER----------");
-
+export async function validateCredentials(user) {
   if (mongoose.connections[0].readyState !== 1) {
     await dbConnect();
+    console.log("----------🗄 MONGOOSE----------");
   }
 
-  let user = await TC(() => User.findOne({ email }).exec());
+  const dbUser = await User.findByEmail(user.email);
+  if (!dbUser) return new Error("User not found");
+  console.log("-----Signin => validate = user found-----");
 
-  if (!user) {
-    console.log("----------REGISTERING USER----------");
-    // 🚧  if user is not registered -- automatically signup user
-    user = await TC(() => registerUser(email, password));
-  }
+  console.log("-----@TODO: check email verification-----");
+  // isEmailVerified = !!dbUser?.emailVerified;
+  // if (!isEmailVerified) {
+  //     isAllowedToLogin = false
 
-  if (user && !user.password) {
-    console.log("----------UPDATE PASSWORD----------");
-    // if user exists but does not have a password add it.
-    // 🚧 FIXME: need to hash before adding password, to ensure the update is valid
-    user = await TC(() => updateUser(user.id, user.password));
-  }
+  //   console.log("----EMAIL NOT VERIFIED----");
+  // }
 
-  console.log("----------AUTHORIZE----------");
-
-  // // bcrypt.compare(password, user.password, (err ,result) => {
-  // //  return  result  ? Promise.resolve(user) : Promise.reject(err)
-  // //});
-  let isValidPassword = true;
-  if (!isValidPassword && password) {
-    console.log("----------VALIDATE PASSWORD----------");
-    // @TODO: Add validattion
-    isValidPassword = await crossCheckPassword(password, user);
-
-    if (!user.emailVerified) {
-      // send user to different page to re-verify email
-      return Promise.reject(
-        "/auth/credentials-signin?error=Please verify your email"
-      );
-    }
-  }
-
-  if (user && isValidPassword) return Promise.resolve(user);
-  return Promise.reject("/auth/credentials-signin?error=Invalid Password");
-};
+  console.log("-----validating password-----");
+  return await dbUser.validPassword(user.password);
+}

@@ -1,10 +1,5 @@
-import { useRef, useEffect } from "react";
-import { useRouter } from "next/router";
 import { Box, Button, Input } from "@chakra-ui/react";
-import { providers, signIn, csrfToken } from "next-auth/client";
 import { useForm } from "react-hook-form";
-import bcrypt from "bcryptjs";
-import { useAuth } from "@/hooks/useAuth";
 
 const RegisterForm = ({ csrfToken, providerId }) => {
   /**
@@ -21,46 +16,14 @@ const RegisterForm = ({ csrfToken, providerId }) => {
    * **************************************************************
    * */
 
-  const { signIn } = useAuth();
-  /**
-   * **************************************************************
-   * @param {fn}     signIn        used to log users in
-   * @args                         (providerId, { email, callbackUrl })
-   * **************************************************************
-   */
-
-  const redirectRef = useRef(null);
-  const router = useRouter();
-
-  useEffect(() => {
-    if (redirectRef.current && typeof window !== "undefined") {
-      return router.replace(
-        "/auth/signin?callbackUrl=http://localhost:3000/",
-        "/auth/signin"
-      );
-    }
-  }, [redirectRef.current]);
-
   const onSubmit = async (credentials) => {
-    // return await signIn(providerId, {
-    //   ...credentials,
-    //   callbackUrl: "http://localhost:3000/api/auth/signin/email",
-    // });
     console.log("credentials", credentials);
-    const newUser = await fetch("http://localhost:3000/api/users/", {
+    await fetch("http://localhost:3000/api/users/", {
       method: "POST",
       "Content-Type": "application/json",
       body: JSON.stringify(credentials),
     });
 
-    console.log("newUser", newUser);
-    // return Promise.resolve()
-
-    if (newUser) {
-      // redirectRef.current = true;
-      console.log('should redirect here...')
-    }
-    console.log("could not add new user");
     /**
      * **************************************************************
      * @param {object}    credentials     { csrfToken, name, email, password }

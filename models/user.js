@@ -52,7 +52,6 @@ const UserSchema = new mongoose.Schema(
   { timestamps: { currentTime: () => Math.floor(Date.now() / 1000) } }
 );
 
-// UserSchema.statics.findByCredentials = async function (email, password) {
 UserSchema.statics.findByEmail = async function (email) {
   console.log("🔵 finding user by credentials");
   const currentUser = this;
@@ -62,7 +61,6 @@ UserSchema.statics.findByEmail = async function (email) {
     console.log('findbycredentials: user does not exist')
     return false;
   }
-  console.log("🚀 ~  findByCredentials= ~ userFound");
   return user;
 };
 

@@ -2,7 +2,7 @@ import NextAuth from "next-auth";
 import Providers from "next-auth/providers";
 import mongoose from "mongoose";
 
-import { authorizeUserBasedOnStatus, registerUser } from "@/utils/auth";
+import { validateCredentials, registerUser } from "@/utils/auth";
 import TC from "@/utils/trycatch";
 import Models from "@/models";
 import dbConnect from "@/utils/mongoose";
@@ -54,6 +54,10 @@ if (process.env.GITHUB_CLIENT_ID) {
             "/auth/credentials-signin?error=User could not be authorized"
           )
         );
+        /**
+         * @param   {object}      credentials       { csrfToken, email, password } = credentials
+         * @returns {user || redirect}
+         */
       },
     })
   );
@@ -62,12 +66,23 @@ if (process.env.GITHUB_CLIENT_ID) {
 const callbacks = {};
 
 callbacks.signIn = async function signIn(user, account, profile) {
-  console.log(
-    "🚀 ~ file: [...nextauth].js ~ line 73 ~ signIn ~ user, account, profile",
-    user,
-    account,
-    profile
-  );
+  console.log("-----SIGNIN CHECK-----");
+
+  // oauth providers are preconfigured, we don't have to manually do any authentication
+  if (account.type === "oauth" || account.type === "email") {
+    return Promise.resolve("/secret"); // ↩️
+  }
+
+  // allows/disallows login - based on a valid dbUser
+  let isAllowedToLogin = !!validateCredentials(user);
+
+  if (isAllowedToLogin) {
+    console.log("-----------USER IS BEING LOGGED IN--------");
+    return Promise.resolve("/secret"); // ↩️
+  }
+  console.log("-----------USER IS NOT ALLOWED TO LOGIN--------");
+  return Promise.resolve("/auth/signin?callbackUrl=http://localhost:3000/"); // ↩️
+
   /**
    * @param  {object} user     User object
    * @param  {object} account  Provider account
@@ -75,52 +90,10 @@ callbacks.signIn = async function signIn(user, account, profile) {
    * @return {boolean}         Return `true` (or a modified JWT) to allow sign in
    *                           Return `false` to deny access
    */
-
-  console.log("-----SIGNIN CHECK-----");
-
-  // oauth providers are preconfigured, we don't have to manually do any authentication
-  if (account.type === "oauth" || account.type === "email") return true; // ↩️
-
-  let isEmailVerified = false; // checks if user's email has been verified
-  let dbUser = undefined; // matching database user to users signing in.
-  let isAllowedToLogin = false; // allows/disallows login - based on a valid dbUser
-
-  // FIXME: when user passwords should be validated should be
-  dbUser = await Models.User.findByEmail(user.email);
-  console.log(
-    "🚀 ~ file: [...nextauth].js ~ line 81 ~ signIn ~ dbUser",
-    dbUser
-  );
-
-  if (!dbUser) console.log("----USER NOT FOUND2----");
-
-  console.log("-----validating passwords-----");
-
-  // @TODO: Add a check for verified once we get verification extended
-
-  // isEmailVerified = !!dbUser?.emailVerified;
-  // if (!isEmailVerified) console.log("----EMAIL NOT VERIFIED----");
-
-  isAllowedToLogin = dbUser.validPassword(user.password);
-
-  if (isAllowedToLogin) {
-    console.log("-----------USER IS BEING LOGGED IN--------");
-    return Promise.resolve("/secret"); // ↩️
-  }
-  console.log("-----------USER IS NOT ALLOWED TO LOGIN--------");
-  return Promise.resolve(false); // ↩️
 };
 
 // @link used for jwt & session: https://tinyurl.com/y3ypltj2
 callbacks.jwt = async (token, user, account, profile, isNewUser) => {
-  /**
-   * @param  {object}  token     Decrypted JSON Web Token
-   * @param  {object}  user      User object      (only available on sign in)
-   * @param  {object}  account   Provider account (only available on sign in)
-   * @param  {object}  profile   Provider profile (only available on sign in)
-   * @param  {boolean} isNewUser True if new user (only available on sign in)
-   * @return {object}            JSON Web Token that will be saved
-   */
   //   if (user) token = { id: user.id };
   //   return token;
 
@@ -132,15 +105,18 @@ callbacks.jwt = async (token, user, account, profile, isNewUser) => {
     console.log("-----token updated-----");
   }
   return Promise.resolve(token);
+
+  /**
+   * @param  {object}  token     Decrypted JSON Web Token
+   * @param  {object}  user      User object      (only available on sign in)
+   * @param  {object}  account   Provider account (only available on sign in)
+   * @param  {object}  profile   Provider profile (only available on sign in)
+   * @param  {boolean} isNewUser True if new user (only available on sign in)
+   * @return {object}            JSON Web Token that will be saved
+   */
 };
 
 // callbacks.session = async function session(session, token) {
-//   /**
-//    * @param  {object} session      Session object
-//    * @param  {object} user         User object    (if using database sessions)
-//    *                               JSON Web Token (if not using database sessions)
-//    * @return {object}              Session that will be returned to the client
-//    */
 //   //   session.accessToken = token.accessToken;
 //   ///  return session;
 //   const { id } = sessionToken;
@@ -158,6 +134,13 @@ callbacks.jwt = async (token, user, account, profile, isNewUser) => {
 //     return Promise.reject();
 //   }
 //   return Promise.resolve(session);
+//
+//   /**
+//    * @param  {object} session      Session object
+//    * @param  {object} user         User object    (if using database sessions)
+//    *                               JSON Web Token (if not using database sessions)
+//    * @return {object}              Session that will be returned to the client
+//    */
 // };
 
 const options = {
