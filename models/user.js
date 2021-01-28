@@ -59,7 +59,7 @@ UserSchema.statics.findByEmail = async function (email) {
 
   if (!user) {
     console.log('findbycredentials: user does not exist')
-    return false;
+    return Promise.resolve(false);
   }
   return user;
 };
@@ -84,9 +84,9 @@ UserSchema.pre("save", async function (next) {
   next();
 });
 
-UserSchema.methods.validPassword = function (password) {
+UserSchema.methods.validPassword =async  function (password) {
   console.log("------validPassword------");
-  return bcrypt.compare(password, this.password);
+  return await bcrypt.compare(password, this.password);
 };
 
 UserSchema.methods.simpleHashPassword = async function (password) {

@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import dbConnect from "@/utils/mongoose";
 import User from "@/models/user";
+import { updateUser } from "@/controllers/user";
 
 export const getCsrfToken = async () => {
   try {
@@ -54,14 +55,14 @@ export async function registerUser(credentials) {
 
   if (!email || !password) {
     console.log("Please provide valid credentials", email, password);
-    return false;
+    return Promise.resolve(false);
   }
 
   const userExists = await User.findOne({ email }).exec();
 
   if (userExists) {
     console.log("This account is already registered");
-    return false;
+    return Promise.resolve(false);
   }
 
   const doc = {
@@ -75,30 +76,47 @@ export async function registerUser(credentials) {
 
   if (!created) {
     console.log("New user could not be registered");
-    return false;
+    return Promise.resolve(false);
   }
 
-  // console.log("-----✅registered user saved-----");
-  // console.log("-----⭕️ testing verification??-----");
-  // // FIXME: verification does not get generated to sent
-  // const response = await TC(() => sendVerificationRequest(created.email));
-  // console.log("🚀 ~ verification: ~ response status:", response.status);
+  console.log("-----✅registered user saved-----");
+  console.log("-----⭕️ testing verification??-----");
+  // FIXME: verification does not get generated to sent
+  const response = await sendVerificationRequest(created.email);
+  console.log("🚀 ~ verification: ~ response status:", response.status);
 
   return Promise.resolve(created);
 }
 
 export async function validateCredentials(user) {
+  // if (!user.password) {
+  //   console.log("plain text pw not found -- exit validation");
+  //   return Promise.reject(false);
+  // }
+
   if (mongoose.connections[0].readyState !== 1) {
     await dbConnect();
     console.log("----------🗄 MONGOOSE----------");
   }
 
-  const dbUser = await User.findByEmail(user.email);
-  if (!dbUser) return new Error("User not found");
+  let dbUser = await User.findByEmail(user.email).catch((e) =>
+    console.log(e)
+  );
+
+  if (!dbUser?.password) {
+    console.log("database user has no password on file -- saving new password");
+    // return Promise.resolve(false);
+    dbUser = await updateUser(dbUser._id, {
+      username: user.email.split("@")[0],
+      password: user.password,
+    });
+    console.log('updated user password')
+
+  }
   console.log("-----Signin => validate = user found-----");
 
   console.log("-----@TODO: check email verification-----");
-  // isEmailVerified = !!dbUser?.emailVerified;
+  // isEmailVerified = dbUser?.emailVerified;
   // if (!isEmailVerified) {
   //     isAllowedToLogin = false
 
@@ -106,5 +124,5 @@ export async function validateCredentials(user) {
   // }
 
   console.log("-----validating password-----");
-  return await dbUser.validPassword(user.password);
+  return await dbUser.validPassword(user.password).catch((e) => console.log(e));
 }

@@ -34,26 +34,29 @@ if (process.env.GITHUB_CLIENT_ID) {
     // save user with local credentials
     Providers.Credentials({
       name: "local",
-
       async authorize(credentials) {
         console.log("------Credentials Authorize------");
-        const { email, password } = credentials;
-
         if (mongoose.connections[0].readyState !== 1) {
           await dbConnect();
           console.log("------DB CONNECT-----");
         }
-        let user = await Models.User.findByEmail(email);
-        if (user) {
-          console.log("authorize: returning found user");
-          return Promise.resolve(user);
+
+        try {
+          const { email, password } = credentials;
+          let user = await Models.User.findByEmail(email);
+          if (user) {
+            console.log("authorize: returning found user");
+            return Promise.resolve(user);
+          }
+          return (
+            !user &&
+            Promise.reject(
+              "/auth/credentials-signin?error=User could not be authorized"
+            )
+          );
+        } catch (e) {
+          console.log(e);
         }
-        return (
-          !user &&
-          Promise.reject(
-            "/auth/credentials-signin?error=User could not be authorized"
-          )
-        );
         /**
          * @param   {object}      credentials       { csrfToken, email, password } = credentials
          * @returns {user || redirect}
@@ -67,21 +70,23 @@ const callbacks = {};
 
 callbacks.signIn = async function signIn(user, account, profile) {
   console.log("-----SIGNIN CHECK-----");
-
   // oauth providers are preconfigured, we don't have to manually do any authentication
   if (account.type === "oauth" || account.type === "email") {
     return Promise.resolve("/secret"); // ↩️
   }
-
+  let isAllowedToLogin;
   // allows/disallows login - based on a valid dbUser
-  let isAllowedToLogin = !!validateCredentials(user);
+  isAllowedToLogin = await validateCredentials(profile).catch((e) =>
+    console.log(e)
+  );
 
   if (isAllowedToLogin) {
     console.log("-----------USER IS BEING LOGGED IN--------");
     return Promise.resolve("/secret"); // ↩️
   }
   console.log("-----------USER IS NOT ALLOWED TO LOGIN--------");
-  return Promise.resolve("/auth/signin?callbackUrl=http://localhost:3000/"); // ↩️
+  return Promise.resolve("auth/error?error=AccessDenied"); // ↩️
+  // return Promise.resolve(false); // ↩️ using false sends to access denied page
 
   /**
    * @param  {object} user     User object
@@ -96,13 +101,13 @@ callbacks.signIn = async function signIn(user, account, profile) {
 callbacks.jwt = async (token, user, account, profile, isNewUser) => {
   //   if (user) token = { id: user.id };
   //   return token;
-
-  console.log("-----JWT CHECK-----");
+  console.log('---JWT CHECK---')
   const isSignIn = !!user;
   if (isSignIn) {
+    console.log("-----GENERATE JWT-----");
     token.auth_time = Number(new Date());
     token.id = user.id;
-    console.log("-----token updated-----");
+    console.log("-----JWT GENERATED-----");
   }
   return Promise.resolve(token);
 
@@ -179,7 +184,7 @@ const options = {
     signIn: "/auth/signin",
   },
   // Enable debug messages in the console if you are having problems
-  debug: true,
+  // debug: true,
 };
 
 export default (req, res) => NextAuth(req, res, options);

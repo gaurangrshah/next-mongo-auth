@@ -1,5 +1,5 @@
 const allowedFields = {
-  user: ["name", "username", "email", "password", "age"],
+  user: ["name", "username", "email", "password"],
   task: ["description", "completed"],
 };
 
