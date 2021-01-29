@@ -69,6 +69,7 @@ if (process.env.GITHUB_CLIENT_ID) {
 
 const callbacks = {};
 
+// @link: https://tinyurl.com/y6jltvz8
 callbacks.signIn = async function signIn(user, account, profile) {
   console.log("-----SIGNIN CHECK-----");
   // oauth providers are preconfigured, we don't have to manually do any authentication
@@ -122,32 +123,33 @@ callbacks.jwt = async (token, user, account, profile, isNewUser) => {
    */
 };
 
-// callbacks.session = async function session(session, token) {
-//   //   session.accessToken = token.accessToken;
-//   ///  return session;
-//   const { id } = sessionToken;
-//   const url = `${process.env.SITE}/api/user/${id}`;
-//   const res = await fetch(url, {
-//     method: "GET",
-//     headers: {
-//       "Content-Type": "application/json",
-//     },
-//   });
-//   if (res.status === 200) {
-//     const user = await res.json();
-//     session.user.name = user.name;
-//   } else {
-//     return Promise.reject();
-//   }
-//   return Promise.resolve(session);
-//
-//   /**
-//    * @param  {object} session      Session object
-//    * @param  {object} user         User object    (if using database sessions)
-//    *                               JSON Web Token (if not using database sessions)
-//    * @return {object}              Session that will be returned to the client
-//    */
-// };
+callbacks.session = async function session(...args) {
+  //   session.accessToken = token.accessToken;
+  ///  return session;
+  const [session, user] = args;
+  console.log("🚀 ~ file: [...nextauth].js ~ line 129 ~ session ~ session, user", session, user)
+
+  const { id } = session;
+  if (mongoose.connections[0].readyState !== 1) {
+    await dbConnect();
+    console.log("------DB CONNECT-----");
+  }
+  const dbUser = Models.User.findById(id)
+    .exec()
+    .catch((e) => console.log("session => err!", e));
+  //@TODO: add encoded token to session if needed
+
+  session.name = user.name;
+
+  return Promise.resolve(session);
+
+  /**
+   * @param  {object} session      Session object
+   * @param  {object} user         User object    (if using database sessions)
+   *                               JSON Web Token (if not using database sessions)
+   * @return {object}              Session that will be returned to the client
+   */
+};
 
 const options = {
   providers,
