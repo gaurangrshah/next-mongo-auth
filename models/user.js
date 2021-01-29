@@ -41,12 +41,9 @@ const UserSchema = new mongoose.Schema(
           throw new Error("password cannot be 'password'");
       },
     },
-    age: {
-      type: Number,
-      default: 0,
-      validate(value) {
-        if (value < 0) throw new Error("Age must be a positive number");
-      },
+    accounts: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Account"
     },
   },
   { timestamps: { currentTime: () => Math.floor(Date.now() / 1000) } }

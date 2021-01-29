@@ -3,7 +3,7 @@ import Providers from "next-auth/providers";
 import mongoose from "mongoose";
 
 import { validateCredentials, registerUser } from "@/utils/auth";
-import TC from "@/utils/trycatch";
+// import TC from "@/utils/trycatch";
 import Models from "@/models";
 import dbConnect from "@/utils/mongoose";
 import jwt from "jsonwebtoken";
@@ -176,11 +176,15 @@ const options = {
     useCreateIndex: true,
     useUnifiedTopology: true,
     useFindAndModify: false,
-    url: `${process.env.MONGODB_URL}/task-manager-api`,
+    url: `${process.env.MONGODB_URL}/next-studio`,
     customModels: {
       User: Models.User,
       Account: Models.Account,
       Session: Models.Session,
+      Asset: Models.Asset,
+      Block: Models.Block,
+      Page: Models.Page,
+      Section: Models.Section,
       // VerificationRequest: Models.VerificationRequest,
     },
   },
