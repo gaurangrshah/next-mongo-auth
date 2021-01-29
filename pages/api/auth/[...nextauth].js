@@ -6,6 +6,7 @@ import { validateCredentials, registerUser } from "@/utils/auth";
 import TC from "@/utils/trycatch";
 import Models from "@/models";
 import dbConnect from "@/utils/mongoose";
+import jwt from "jsonwebtoken";
 
 const providers = [
   Providers.Email({
@@ -101,7 +102,7 @@ callbacks.signIn = async function signIn(user, account, profile) {
 callbacks.jwt = async (token, user, account, profile, isNewUser) => {
   //   if (user) token = { id: user.id };
   //   return token;
-  console.log('---JWT CHECK---')
+  console.log("---JWT CHECK---");
   const isSignIn = !!user;
   if (isSignIn) {
     console.log("-----GENERATE JWT-----");
@@ -163,6 +164,9 @@ const options = {
   jwt: {
     // signingKey: process.env.JWT_SIGNING_PRIVATE_KEY,
     secret: process.env.JWT_SECRET || "this-should-be-a-secret",
+    // custom methods allow overriding of default token encode/decode methods
+    encode: async ({ token, secret }) => await jwt.sign(token, secret),
+    decode: async ({ token, secret }) => await jwt.verify(token, secret),
   },
   callbacks,
   database: {
