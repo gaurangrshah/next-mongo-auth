@@ -127,7 +127,6 @@ callbacks.session = async function session(...args) {
   //   session.accessToken = token.accessToken;
   ///  return session;
   const [session, user] = args;
-  console.log("🚀 ~ file: [...nextauth].js ~ line 129 ~ session ~ session, user", session, user)
 
   const { id } = session;
   if (mongoose.connections[0].readyState !== 1) {
@@ -180,7 +179,6 @@ const options = {
     url: `${process.env.MONGODB_URL}/task-manager-api`,
     customModels: {
       User: Models.User,
-      Task: Models.Task,
       Account: Models.Account,
       Session: Models.Session,
       // VerificationRequest: Models.VerificationRequest,
